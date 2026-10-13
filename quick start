@@ -1,0 +1,24 @@
+BASE=/opt/zimbra        # Carbonio: /opt/zextras
+
+source $BASE/bin/zmshutil; zmsetvars
+
+$BASE/common/bin/ldapsearch -LLL -o ldif-wrap=no -x \
+  -H "$ldap_master_url" -D "$zimbra_ldap_userdn" -w "$zimbra_ldap_password" \
+  -b "" '(&(objectClass=zimbraAccount)(!(zimbraIsSystemResource=TRUE)))' \
+  mail displayName cn mobile zimbraAccountStatus \
+| awk -v RS= -F'\n' '
+BEGIN { print "EmailID,Status,Name,Mobile" }
+{ m=mob=s=n=c=""
+  for (i=1;i<=NF;i++) {
+    if ($i ~ /^mail: /)                 m=substr($i,7)
+    if ($i ~ /^mobile: /)               mob=substr($i,9)
+    if ($i ~ /^zimbraAccountStatus: /)  s=substr($i,22)
+    if ($i ~ /^displayName: /)          n=substr($i,14)
+    if ($i ~ /^cn: /)                   c=substr($i,5)
+  }
+  print m "," s ",\"" (n ? n : c) "\"," mob
+}' > /tmp/mailbox_report.csv
+
+chmod 600 /tmp/mailbox_report.csv
+wc -l /tmp/mailbox_report.csv
+head -5 /tmp/mailbox_report.csv
