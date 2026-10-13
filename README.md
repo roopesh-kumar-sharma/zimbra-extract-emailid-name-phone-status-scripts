@@ -69,7 +69,6 @@ Account data lives in OpenLDAP. The script loads the LDAP URL and credentials fr
 ## Security
 
 - The CSV contains personal data. Delete it after use.
-- Never commit exports, hostnames or credentials to this repository.
 
 ## License
 
